@@ -1,0 +1,39 @@
+.endgame-screen {
+  transition: opacity 2s linear;
+  /* border: 1px solid red; */
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  color: white;
+  position: absolute;
+  z-index: 10;
+  text-transform: uppercase;
+  font-family: "Nova Square";
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  flex-direction: column;
+  background-color: rgba(0,0,0,.6);
+}
+
+.endgame-screen .title {
+  font-size: 15rem;
+}
+
+.endgame-screen .text {
+  font-size: 2rem;
+}
+
+.endgame-screen.show {
+  opacity: 1;
+}
+
+.endgame-screen.show ~ .city,
+.endgame-screen.show ~ .player  {
+  pointer-events: none;
+  opacity: 1;
+}
+
+.endgame-screen.hide {
+  opacity: 0;
+}

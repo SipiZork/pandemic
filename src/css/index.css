@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css?family=Nova+Square|Titillium+Web&display=swap');
+
+* {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.root {
+  width: 100%;
+  height: 100%;
+  background-image: url('./img/world2.png');
+  background-repeat: no-repeat;
+  background-size: cover;
+  min-width: 1880px;
+  max-width: 1880px;
+  min-height: 970px;
+  max-height: 970px;
+  margin: 0 auto;
+  position: relative;
+}
+
+svg.city-lines {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  position: absolute;
+  z-index: 0;
+}
+
+svg.city-lines path {
+  filter: url("#filter1");
+  stroke: rgba(240,232,0,.7);
+  stroke-dasharray: 3;
+  stroke-width: 2;
+  
+}
+
+.root svg.city-lines path.north-america {
+  d: path('M0 320 L207 335 197 435 0 500 M207 335 L0 360 M207 335 L370 295 470 287 595 287 520 360 430 455 300 475 197 435 367 295 407 365 430 455 M407 365 L520 365 485 287 M367 295 L305 475');
+}
+
+.root svg.city-lines path.south-america {
+  d: path('M305 475 L365 700 M305 475 L434 575 365 700 417 870 M430 575 L570 810 622 731 430 575 430 455 M622 731 L775 340 595 287 M622 731 L840 565');
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
