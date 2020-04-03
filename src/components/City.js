@@ -1,4 +1,5 @@
 import React, { Component, Fragment } from 'react';
+import Players from './Players'
 
 class City extends Component {
 
@@ -72,9 +73,24 @@ class City extends Component {
     }
   }
 
+  hasPlayer = (city, players) => {
+    let playerCounter = 0
+    Object.keys(players).map(player => {
+      if(players[player].location === city) {
+        playerCounter++
+      }
+    });
+    if(playerCounter > 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   render() {
-    const { city, cities, movePlayer } = this.props
+    const { city, cities, movePlayer, players } = this.props
     const { name, positionX, positionY, infection, base, color, lines, linesTo } = cities[city]
+    const hasPlayer = this.hasPlayer(city, players);
     return (
       <Fragment key={city}>
         <div
@@ -86,7 +102,7 @@ class City extends Component {
         >
           <div
             className="circle"
-            onClick={() => this.props.incrementInfection(city, 1)}
+            onClick={() => this.props.movePlayer(city)}
             style={{ backgroundColor: this.colorSwitcher(color) }}
           ></div>
           <div className="name">
@@ -94,6 +110,14 @@ class City extends Component {
           </div>
           {this.base(base, name)}
           {this.infection(infection, name)}
+          {hasPlayer ? <div className="players">
+            <Players
+              cities={cities}
+              city={city}
+              players={players}
+            />
+          </div> : ""}
+
         </div>
         {this.lines(lines, linesTo, positionX, positionY, name)}
       </Fragment>

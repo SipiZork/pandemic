@@ -2,8 +2,9 @@ import React, { Component, Fragment} from 'react'
 import Cities from './Cities'
 import Players from './Players'
 import HUD from './Hud'
-import AllCities from '../cities.js'
-import AllActions from '../actions.js'
+import AllCities from '../cities'
+import AllActions from '../actions'
+import AllCasts from '../casts'
 import '../css/board.css'
 
 class Board extends Component {
@@ -14,6 +15,7 @@ class Board extends Component {
     infectionCards: {},
     playerCards: {},
     actionCards: {},
+    casts: {},
     infectionCubes: {
       "yellow": {
         color: "yellow",
@@ -33,20 +35,29 @@ class Board extends Component {
       },
     },
     players: {
-      player1: {
-        id: "player1",
+      1: {
+        id: 1,
         name: "SipiZork",
-        location: "Atlanta",
-        cast: "Researcher",
+        location: "Chicago",
+        cast: null,
+        selectCast: false,
       },
-      player2: {
-        id: "player2",
+      2: {
+        id: 2,
         name: "Annamari",
-        location: "Miami",
-        cast: "Medic",
-      }
+        location: "Chicago",
+        cast: null,
+        selectCast: false,
+      },
+      3: {
+        id: 3,
+        name: "Zsuzsi",
+        location: "Chicago",
+        cast: null,
+        selectCast: false,
+      },
     },
-    actualPlayer: "player1",
+    actualPlayer: 1,
     endGameState: {
       class: "endgame-screen hide",
       text: null
@@ -54,7 +65,7 @@ class Board extends Component {
   }
   // SZÜKSÉGES STATE ELEMEK FELTÖLTÉSE KÜLSŐ ADATOKBÓL
   componentDidMount() {
-    this.setState({ cities: AllCities, actionCards: AllActions }, () => {
+    this.setState({ cities: AllCities, actionCards: AllActions, casts: AllCasts }, () => {
       this.startGame()
     })
   }
@@ -253,12 +264,11 @@ class Board extends Component {
     this.setState({ endGameState })
   }
 
-  // TÁBLA KIRAJZOLÁSA
-  render() {
+  renderBoard = () => {
     const { cities, players, actualPlayer } = this.state
     return (
       <Fragment>
-        <div className={this.state.endGameState.class}>
+        <div defaultclassname="endgame-screen hide" className={this.state.endGameState.class}>
           <div className="title">
             Vesztettetek
           </div>
@@ -276,17 +286,95 @@ class Board extends Component {
         </svg>
         <Cities
           cities={cities}
+          players={players}
           actualPlayer={actualPlayer}
           movePlayer={this.movePlayer}
           decrementInfection={this.decrementInfection}
           incrementInfection={this.startIncrement}
         />
-        <Players
+        {/* <Players
           cities={cities}
           players={players}
           actualPlayer={actualPlayer}
-        />
+        /> */}
         <HUD />
+      </Fragment>
+    )
+  }
+
+  nextPlayer = () => {
+    const { players, actualPlayer } = this.state
+    let nextPlayer
+    Object.keys(players).map(player => {
+      if(players[player].id === actualPlayer ) {
+        nextPlayer = players[player].id + 1
+      }
+    })
+    if(players[nextPlayer] === null || players[nextPlayer] === undefined) {
+      nextPlayer = 1
+    }
+    this.setState({ actualPlayer: nextPlayer })
+  }
+
+  selectCast = id => {
+    const { actualPlayer } = this.state
+    const players = { ...this.state.players }
+    const casts = { ...this.state.casts }
+    players[actualPlayer].cast = casts[id].name
+    players[actualPlayer].selectCast = true
+    this.setState({ players }, () => {
+      delete casts[id]
+      this.setState({ casts }, () => {
+        this.nextPlayer()
+      })
+    })
+  }
+
+  renderSelectCast = () => {
+    const { casts } = this.state
+    let castDivs = []
+    Object.keys(casts).map(cast => {
+      console.log(casts[cast].name);
+      castDivs.push(
+        <div
+          key={casts[cast].id}
+          index={casts[cast].id}
+          className="cast"
+          onClick={() => this.selectCast(casts[cast].id)}
+        >
+          {casts[cast].name}
+        </div>
+      )
+    })
+    console.log(castDivs);
+    return (
+      <Fragment>
+        <div className="casts">
+          {castDivs}
+        </div>
+      </Fragment>
+    )
+  }
+
+  selectRenderState = () => {
+    let castsSelected = true
+    Object.keys(this.state.players).map(player => {
+      if(this.state.players[player].cast === null ) {
+        castsSelected = false
+      }
+    })
+    if(!castsSelected) {
+      return this.renderSelectCast()
+    } else {
+      return this.renderBoard()
+    }
+  }
+
+  // TÁBLA KIRAJZOLÁSA
+  render() {
+    return (
+      <Fragment>
+        {this.selectRenderState()}
       </Fragment>
     )
   }

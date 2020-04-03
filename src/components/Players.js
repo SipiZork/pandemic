@@ -4,16 +4,18 @@ import '../css/players.css'
 
 class Players extends Component {
   render() {
-    const { players, cities } = this.props
+    const { players, city } = this.props
       return (
         <Fragment>
-          {Object.keys(players).map(player => (
-            <Player
-              key={player}
-              cities={cities}
-              player={players[player]}
-            />
-            ))}
+          {Object.keys(players).map(player => {
+            if(players[player].location === city) {
+              return (
+                <Player
+                  player={player}
+                />
+              )
+            }
+          })}
         </Fragment>
       )
   }

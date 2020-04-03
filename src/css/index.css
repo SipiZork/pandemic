@@ -40,7 +40,7 @@ svg.city-lines path {
   stroke: rgba(240,232,0,.7);
   stroke-dasharray: 3;
   stroke-width: 2;
-  
+
 }
 
 .root svg.city-lines path.north-america {

@@ -12,6 +12,7 @@ class Cities extends Component {
             key={city}
             city={city}
             cities={this.props.cities}
+            players={this.props.players}
             actualPlayer={this.props.actualPlayer}
             movePlayer={this.props.movePlayer}
             decrementInfection={this.props.decrementInfection}
