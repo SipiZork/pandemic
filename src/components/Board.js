@@ -299,12 +299,6 @@ class Board extends Component {
   }
 
   shuffleDeck = (deck) => {
-    const playerCards = { ...this.state.playerCards }
-    const was = {...playerCards["Washington"]}
-    was.name = "Alma"
-    playerCards["Washington"] = was
-    this.setState({ playerCards })
-
     if(deck === "infectionCards") {
       const infectionCards = { ...this.state.infectionCards }
       let cardArray = []
@@ -410,13 +404,7 @@ class Board extends Component {
       if(array4.length === divided ) { array4.push("Epidemic4")}
       if(array5.length === divided ) { array5.push("Epidemic5")}
       if(array6.length === divided ) { array6.push("Epidemic6")}
-      console.log(array1);
-      console.log(array2);
-      console.log(array3);
-      console.log(array4);
-      console.log(array5);
-      console.log(array6);
-      console.log(array7);
+
       array1 = this.shuffle(array1)
       array2 = this.shuffle(array2)
       array3 = this.shuffle(array3)
@@ -424,16 +412,8 @@ class Board extends Component {
       array5 = this.shuffle(array5)
       array6 = this.shuffle(array6)
       array7 = this.shuffle(array7)
-      console.log(array1);
-      console.log(array2);
-      console.log(array3);
-      console.log(array4);
-      console.log(array5);
-      console.log(array6);
-      console.log(array7);
+
       cardArray = this.unionDecks(array1, array2, array3, array4, array5, array6, array7, divided);
-      console.log(cardArray);
-      let epidemicCounter = 1;
       Object.keys(playerCards).map(card => {
         for(let i = 0; i < cardArray.length; i++) {
           if(cardArray[i] === playerCards[card].name) {
