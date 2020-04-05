@@ -88,7 +88,7 @@ class City extends Component {
   }
 
   render() {
-    const { city, cities, movePlayer, players, actualPlayer } = this.props
+    const { city, cities, movePlayer, players } = this.props
     const { name, positionX, positionY, infection, base, color, lines, linesTo } = cities[city]
     const hasPlayer = this.hasPlayer(city, players);
     return (
@@ -102,7 +102,7 @@ class City extends Component {
         >
           <div
             className="circle"
-            onClick={() => this.props.incrementInfection(city, 1)}
+            onClick={() => this.props.movePlayer(city)}
             style={{ backgroundColor: this.colorSwitcher(color) }}
           ></div>
           <div className="name">

@@ -15,7 +15,7 @@ const AllCities = {
     linesTo: null,
     from: ["Washington", "Chicago", "Miami"],
     path: ["Washington", "Chicago"],
-    outbreaked: true,
+    outbreaked: false,
   },
   "Chicago": {
     name: "Chicago",

@@ -6,9 +6,6 @@ import AllCities from '../cities'
 import AllActions from '../actions'
 import AllCasts from '../casts'
 import '../css/board.css'
-import { shuffle, shuffleDeck } from './DeckModules'
-import { movePlayer, nextPlayer, selectCast } from './PlayerModules'
-import { drawLines, endGame } from './GameModules'
 
 class Board extends Component {
 
@@ -135,9 +132,10 @@ class Board extends Component {
       counter++
     }
     // KEZDŐ KÁRTYÁK FELTÖLTÉSE
-    infectionCards = shuffleDeck("infectionCards", infectionCards, this.state.mode)
-    playerCards = shuffleDeck("playerCards", playerCards, this.state.mode)
-    this.setState({ infectionCards, playerCards })
+    this.setState({ infectionCards , playerCards }, () => {
+      this.shuffleDeck("infectionCards")
+      this.shuffleDeck("playerCards")
+    })
   }
   // JÁTÉKOS MOZGATÁSA
   movePlayer = city => {
@@ -236,6 +234,26 @@ class Board extends Component {
     }
   }
 
+  drawLines = () => {
+    const { cities } = this.state
+    let paths = "";
+    Object.keys(cities).map(city => {
+      const path = cities[city].path
+      if(path !== null) {
+        cities[city].path.forEach(fromCity => {
+          // console.log(fromCity);
+          const cityPosX = cities[city].positionX + 75
+          const cityPosY = cities[city].positionY + 15
+          const fromCityPosX = cities[fromCity].positionX + 75
+          const fromCityPosY = cities[fromCity].positionY + 15
+          paths += (`M200 335 L0 325 M200 340 L0 375 M190 436 L0 520 M1635 323 L1880 330 M1630 590 L1880 550 M1640 820 L1880 730 M${fromCityPosX } ${fromCityPosY} L${cityPosX} ${cityPosY} `)
+        })
+      }
+      return null
+    })
+    return paths
+  }
+
   checkInfectionCubes = () => {
     const infectionCubes = { ...this.state.infectionCubes }
     let lose = false
@@ -248,8 +266,173 @@ class Board extends Component {
       }
     });
     if(lose) {
-      const result = endGame(this.state.endGameState, `Elfogytak a ${this.endGameColorSwticher(loseColor)} színű betegség kockák`)
-      this.setState({ endGameState: result });
+      this.endGame(`Elfogytak a ${this.endGameColorSwticher(loseColor)} színű betegség kockák`)
+    }
+  }
+
+  shuffle = (deck) => {
+    if(deck.length > 1) {
+      for(let i = deck.length -1; i > 0; i--) {
+        const j = Math.floor(Math.random() * i)
+        const temp = deck[i]
+        deck[i] = deck[j]
+        deck[j] = temp
+      }
+    }
+    return deck
+  }
+
+  unionDecks = (deck1, deck2, deck3, deck4, deck5, deck6, deck7, divided) => {
+    let deck = []
+    console.log(divided);
+    if(deck5.length > 0 && deck5.length < divided+1 ) { for(let i = 0; i < deck5.length; i++ ) { deck.unshift(deck5[i]) }}
+    if(deck6.length > 0 && deck6.length < divided+1 ) { for(let i = 0; i < deck6.length; i++ ) { deck.unshift(deck6[i]) }}
+    if(deck7.length > 0 && deck7.length < divided+1 ) { for(let i = 0; i < deck7.length; i++ ) { deck.unshift(deck7[i]) }}
+    if(deck1.length > 0 && deck1.length === divided+1) { for(let i = 0; i < deck1.length; i++ ) { deck.push(deck1[i]) }}
+    if(deck2.length > 0 && deck2.length === divided+1) { for(let i = 0; i < deck2.length; i++ ) { deck.push(deck2[i]) }}
+    if(deck3.length > 0 && deck3.length === divided+1) { for(let i = 0; i < deck3.length; i++ ) { deck.push(deck3[i]) }}
+    if(deck4.length > 0 && deck4.length === divided+1) { for(let i = 0; i < deck4.length; i++ ) { deck.push(deck4[i]) }}
+    if(deck5.length > 0 && deck5.length === divided+1) { for(let i = 0; i < deck5.length; i++ ) { deck.push(deck5[i]) }}
+    if(deck6.length > 0 && deck6.length === divided+1) { for(let i = 0; i < deck6.length; i++ ) { deck.push(deck6[i]) }}
+    if(deck7.length > 0 && deck7.length === divided+1) { for(let i = 0; i < deck7.length; i++ ) { deck.push(deck7[i]) }}
+    return deck;
+  }
+
+  shuffleDeck = (deck) => {
+    if(deck === "infectionCards") {
+      const infectionCards = { ...this.state.infectionCards }
+      let cardArray = []
+      Object.keys(infectionCards).map(card => {
+        cardArray.push(infectionCards[card].name)
+      })
+      for(let i = cardArray.length -1; i > 0; i--) {
+        const j = Math.floor(Math.random() * i)
+        const temp = cardArray[i]
+        cardArray[i] = cardArray[j]
+        cardArray[j] = temp
+      }
+      Object.keys(infectionCards).map(card => {
+        for(let i = 0; i < cardArray.length; i++) {
+          if(cardArray[i] === infectionCards[card].name) {
+            const city = {...infectionCards[infectionCards[card].name]}
+            city.id = i+1
+            infectionCards[infectionCards[card].name] = city
+          }
+        }
+      })
+      this.setState({ infectionCards })
+    }
+    if(deck === "playerCards") {
+      const playerCards = { ...this.state.playerCards }
+      let cardArray = []
+      Object.keys(playerCards).map(card => {
+        cardArray.push(playerCards[card].name)
+      })
+      for(let i = 0; i < cardArray.length; i++) {
+        if(cardArray[i] === "Epidemic1") {
+          let infCard
+          switch (this.state.mode) {
+            case "easy":
+              infCard = 4
+              break
+            case "normal":
+              infCard = 5
+              break
+            case "hard":
+              infCard = 6
+              break;
+          }
+          cardArray.splice(i,infCard);
+        }
+      }
+      console.log(cardArray);
+      for(let i = cardArray.length -1; i > 0; i--) {
+        const j = Math.floor(Math.random() * i)
+        const temp = cardArray[i]
+        cardArray[i] = cardArray[j]
+        cardArray[j] = temp
+      }
+      // Object.keys(playerCards).map(card => {
+      //   for(let i = 0; i < cardArray.length; i++) {
+      //     if(cardArray[i] === playerCards[card].name) {
+      //       const city = {...playerCards[playerCards[card].name]}
+      //       city.id = i+1
+      //       playerCards[playerCards[card].name] = city
+      //     }
+      //   }
+      // })
+      // el kell osztani megfelelő számú egyforma tömbre és belerakni egy egy kártyát, külön megkverni és egymásra rakni
+      let divided
+      switch (this.state.mode) {
+        case "easy":
+          divided = 13
+          break
+        case "normal":
+          divided = 10
+          break
+        case "hard":
+          divided = 8
+          break;
+      }
+        let array1 = []
+        let array2 = []
+        let array3 = []
+        let array4 = []
+        let array5 = []
+        let array6 = []
+        let array7 = []
+        for(let i = 0; i < cardArray.length; i++){
+          if(i < divided) {
+            array1.push(cardArray[i])
+          } else if(i < divided * 2 ) {
+            array2.push(cardArray[i])
+          } else if(i < divided * 3 ) {
+            array3.push(cardArray[i])
+          } else if(i < divided * 4 ) {
+            array4.push(cardArray[i])
+          } else if(i < divided * 5 ) {
+            array5.push(cardArray[i])
+          } else if(i < divided * 6 ) {
+            array6.push(cardArray[i])
+          } else {
+            array7.push(cardArray[i])
+          }
+        }
+      if(array1.length === divided ) { array1.push("Epidemic1")}
+      if(array2.length === divided ) { array2.push("Epidemic2")}
+      if(array3.length === divided ) { array3.push("Epidemic3")}
+      if(array4.length === divided ) { array4.push("Epidemic4")}
+      if(array5.length === divided ) { array5.push("Epidemic5")}
+      if(array6.length === divided ) { array6.push("Epidemic6")}
+
+      array1 = this.shuffle(array1)
+      array2 = this.shuffle(array2)
+      array3 = this.shuffle(array3)
+      array4 = this.shuffle(array4)
+      array5 = this.shuffle(array5)
+      array6 = this.shuffle(array6)
+      array7 = this.shuffle(array7)
+
+      cardArray = this.unionDecks(array1, array2, array3, array4, array5, array6, array7, divided);
+      Object.keys(playerCards).map(card => {
+        for(let i = 0; i < cardArray.length; i++) {
+          if(cardArray[i] === playerCards[card].name) {
+            const city = {...playerCards[playerCards[card].name]}
+            city.id = i+1
+            playerCards[playerCards[card].name] = city
+          }
+        }
+      })
+      // Object.keys(playerCards).map(card => {
+      //   for(let i = 0; i < cardArray.length; i++) {
+      //     if(cardArray[i] === playerCards[card].name) {
+      //       const city = {...playerCards[playerCards[card].name]}
+      //       city.id = i+1
+      //       playerCards[playerCards[card].name] = city
+      //     }
+      //   }
+      // })
+      this.setState({ playerCards })
     }
   }
 
@@ -266,6 +449,14 @@ class Board extends Component {
     }
   }
 
+  endGame = (text) => {
+    const endGameDiv =  document.querySelector('.end-screen')
+    const endGameState = {...this.state }
+    endGameState.class = "endgame-screen show"
+    endGameState.text = text
+    this.setState({ endGameState })
+  }
+
   renderBoard = () => {
     const { cities, players, actualPlayer } = this.state
     return (
@@ -280,7 +471,7 @@ class Board extends Component {
         </div>
         <svg className="city-lines">
           <path
-            d={drawLines(this.state.cities)}
+            d={this.drawLines()}
           />
           <filter id="filter1">
             <feDropShadow dx="0" dy="0" stdDeviation="10" floodColor="rgba(240,232,0,1)"/>
@@ -304,9 +495,36 @@ class Board extends Component {
     )
   }
 
-  selectCast = castId => {
-    const result = selectCast(castId, this.state.players, this.state.actualPlayer, this.state.casts, this.state.gameSession)
-    this.setState({ players: result[0], actualPlayer: result[1], gameSession: result[2]})
+  nextPlayer = () => {
+    const { players, actualPlayer } = this.state
+    let nextPlayer
+    let gameSession = "starting"
+    Object.keys(players).map(player => {
+      if(players[player].id === actualPlayer ) {
+        nextPlayer = players[player].id + 1
+      }
+    })
+    if(players[nextPlayer] === null || players[nextPlayer] === undefined) {
+      nextPlayer = 1
+      if(this.state.gameSession === "starting") {
+        gameSession = "started"
+      }
+    }
+    this.setState({ actualPlayer: nextPlayer, gameSession: gameSession })
+  }
+
+  selectCast = id => {
+    const { actualPlayer } = this.state
+    const players = { ...this.state.players }
+    const casts = { ...this.state.casts }
+    players[actualPlayer].cast = casts[id].name
+    players[actualPlayer].selectCast = true
+    this.setState({ players }, () => {
+      delete casts[id]
+      this.setState({ casts }, () => {
+        this.nextPlayer()
+      })
+    })
   }
 
   renderSelectCast = () => {
