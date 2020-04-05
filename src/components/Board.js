@@ -16,6 +16,7 @@ class Board extends Component {
     playerCards: {},
     actionCards: {},
     casts: {},
+    gameSession: "starting",
     infectionCubes: {
       "yellow": {
         color: "yellow",
@@ -65,14 +66,25 @@ class Board extends Component {
   }
   // SZÜKSÉGES STATE ELEMEK FELTÖLTÉSE KÜLSŐ ADATOKBÓL
   componentDidMount() {
-    this.setState({ cities: AllCities, actionCards: AllActions, casts: AllCasts }, () => {
-      this.startGame()
-    })
+    this.setState({ cities: AllCities, actionCards: AllActions, casts: AllCasts })
   }
+
+  checkGameSession = prevState => {
+    if(prevState.gameSession !== this.state.gameSession) {
+      if(this.state.gameSession === "started") {
+        this.startGame()
+      }
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    this.checkGameSession(prevState)
+  }
+
   // KEZDŐ JÉTLK ÁLLÁS BETÖLTÉSE
   startGame = () => {
-    let infectionCards = {}
-    let playerCards ={}
+    let infectionCards = {...this.state.infectionCards }
+    let playerCards ={ ...this.state.playerCards }
     let counter = 1
     const { cities, actionCards } = this.state
     Object.keys(cities).map(city => {
@@ -81,8 +93,8 @@ class Board extends Component {
         name: city,
         text: null,
       }
-      infectionCards[counter] = card
-      playerCards[counter] = card
+      infectionCards[city] = card
+      playerCards[city] = card
       counter++
       return null
     });
@@ -98,17 +110,32 @@ class Board extends Component {
       return null
     });
     // ITT EL KELL MAJD OSZTANI A MÁR AKTUÁLIS JÁTÉKOS KÁRTYÁKAT A STATE.MODE SZERINTI SZÁMMAL EGYELŐRE RÉSZEKRE, MINHDEGYIK VÉGÉRE ODA KELL TENNI EGY JÁRVÁNY KRÁTYÁK ÉS MINDEGYIKET EGYESÉVEL KELL MEGKEVERNI MAJD EGYMÁSRA TENNI ISMÉT
-    for(let i = 0; i < 6; i++) {
+    let epidCard
+    switch (this.state.mode) {
+      case "easy":
+        epidCard = 4
+        break
+      case "normal":
+        epidCard = 5
+        break
+      case "hard":
+        epidCard = 6
+        break;
+    }
+    for(let i = 1; i <= epidCard; i++) {
       const card = {
         id: counter,
-        name: "Járvány",
+        name: `Epidemic${i}`,
         text: null,
       }
-      playerCards[`Epidemic${counter}`] = card
+      playerCards[`Epidemic${i}`] = card
       counter++
     }
     // KEZDŐ KÁRTYÁK FELTÖLTÉSE
-    this.setState({ infectionCards: infectionCards, playerCards: playerCards })
+    this.setState({ infectionCards , playerCards }, () => {
+      this.shuffleDeck("infectionCards")
+      this.shuffleDeck("playerCards")
+    })
   }
   // JÁTÉKOS MOZGATÁSA
   movePlayer = city => {
@@ -169,7 +196,7 @@ class Board extends Component {
         if(cities[city].infections[infectionColor] === null && colorCounter < incrementBy){
           cities[city].infections[infectionColor] = color;
           infectionCubes[color].pieces = infectionCubes[color].pieces - 1
-          console.log(this.checkInfectionCubes())
+          this.checkInfectionCubes()
           colorCounter++;
         }
       });
@@ -177,11 +204,11 @@ class Board extends Component {
     } else {
       if(!cities[city].outbreaked){
         Object.keys(cities[city].infections).map(infectionColor => {
-          console.log(cities[city].infections[infectionColor]);
+          // console.log(cities[city].infections[infectionColor]);
           if(cities[city].infections[infectionColor] === null){
             cities[city].infections[infectionColor] = color;
             infectionCubes[color].pieces = infectionCubes[color].pieces - 1
-            console.log(this.checkInfectionCubes())
+            this.checkInfectionCubes()
           }
         });
         this.outBreak(city)
@@ -232,7 +259,7 @@ class Board extends Component {
     let lose = false
     let loseColor = null;
     Object.keys(infectionCubes).map(color => {
-      console.log(infectionCubes[color]);
+      // console.log(infectionCubes[color]);
       if(infectionCubes[color].pieces <= 0) {
         lose = true
         loseColor = color
@@ -240,6 +267,192 @@ class Board extends Component {
     });
     if(lose) {
       this.endGame(`Elfogytak a ${this.endGameColorSwticher(loseColor)} színű betegség kockák`)
+    }
+  }
+
+  shuffle = (deck) => {
+    if(deck.length > 1) {
+      for(let i = deck.length -1; i > 0; i--) {
+        const j = Math.floor(Math.random() * i)
+        const temp = deck[i]
+        deck[i] = deck[j]
+        deck[j] = temp
+      }
+    }
+    return deck
+  }
+
+  unionDecks = (deck1, deck2, deck3, deck4, deck5, deck6, deck7, divided) => {
+    let deck = []
+    console.log(divided);
+    if(deck5.length > 0 && deck5.length < divided+1 ) { for(let i = 0; i < deck5.length; i++ ) { deck.unshift(deck5[i]) }}
+    if(deck6.length > 0 && deck6.length < divided+1 ) { for(let i = 0; i < deck6.length; i++ ) { deck.unshift(deck6[i]) }}
+    if(deck7.length > 0 && deck7.length < divided+1 ) { for(let i = 0; i < deck7.length; i++ ) { deck.unshift(deck7[i]) }}
+    if(deck1.length > 0 && deck1.length === divided+1) { for(let i = 0; i < deck1.length; i++ ) { deck.push(deck1[i]) }}
+    if(deck2.length > 0 && deck2.length === divided+1) { for(let i = 0; i < deck2.length; i++ ) { deck.push(deck2[i]) }}
+    if(deck3.length > 0 && deck3.length === divided+1) { for(let i = 0; i < deck3.length; i++ ) { deck.push(deck3[i]) }}
+    if(deck4.length > 0 && deck4.length === divided+1) { for(let i = 0; i < deck4.length; i++ ) { deck.push(deck4[i]) }}
+    if(deck5.length > 0 && deck5.length === divided+1) { for(let i = 0; i < deck5.length; i++ ) { deck.push(deck5[i]) }}
+    if(deck6.length > 0 && deck6.length === divided+1) { for(let i = 0; i < deck6.length; i++ ) { deck.push(deck6[i]) }}
+    if(deck7.length > 0 && deck7.length === divided+1) { for(let i = 0; i < deck7.length; i++ ) { deck.push(deck7[i]) }}
+    return deck;
+  }
+
+  shuffleDeck = (deck) => {
+    const playerCards = { ...this.state.playerCards }
+    const was = {...playerCards["Washington"]}
+    was.name = "Alma"
+    playerCards["Washington"] = was
+    this.setState({ playerCards })
+
+    if(deck === "infectionCards") {
+      const infectionCards = { ...this.state.infectionCards }
+      let cardArray = []
+      Object.keys(infectionCards).map(card => {
+        cardArray.push(infectionCards[card].name)
+      })
+      for(let i = cardArray.length -1; i > 0; i--) {
+        const j = Math.floor(Math.random() * i)
+        const temp = cardArray[i]
+        cardArray[i] = cardArray[j]
+        cardArray[j] = temp
+      }
+      Object.keys(infectionCards).map(card => {
+        for(let i = 0; i < cardArray.length; i++) {
+          if(cardArray[i] === infectionCards[card].name) {
+            const city = {...infectionCards[infectionCards[card].name]}
+            city.id = i+1
+            infectionCards[infectionCards[card].name] = city
+          }
+        }
+      })
+      this.setState({ infectionCards })
+    }
+    if(deck === "playerCards") {
+      const playerCards = { ...this.state.playerCards }
+      let cardArray = []
+      Object.keys(playerCards).map(card => {
+        cardArray.push(playerCards[card].name)
+      })
+      for(let i = 0; i < cardArray.length; i++) {
+        if(cardArray[i] === "Epidemic1") {
+          let infCard
+          switch (this.state.mode) {
+            case "easy":
+              infCard = 4
+              break
+            case "normal":
+              infCard = 5
+              break
+            case "hard":
+              infCard = 6
+              break;
+          }
+          cardArray.splice(i,infCard);
+        }
+      }
+      console.log(cardArray);
+      for(let i = cardArray.length -1; i > 0; i--) {
+        const j = Math.floor(Math.random() * i)
+        const temp = cardArray[i]
+        cardArray[i] = cardArray[j]
+        cardArray[j] = temp
+      }
+      // Object.keys(playerCards).map(card => {
+      //   for(let i = 0; i < cardArray.length; i++) {
+      //     if(cardArray[i] === playerCards[card].name) {
+      //       const city = {...playerCards[playerCards[card].name]}
+      //       city.id = i+1
+      //       playerCards[playerCards[card].name] = city
+      //     }
+      //   }
+      // })
+      // el kell osztani megfelelő számú egyforma tömbre és belerakni egy egy kártyát, külön megkverni és egymásra rakni
+      let divided
+      switch (this.state.mode) {
+        case "easy":
+          divided = 13
+          break
+        case "normal":
+          divided = 10
+          break
+        case "hard":
+          divided = 8
+          break;
+      }
+        let array1 = []
+        let array2 = []
+        let array3 = []
+        let array4 = []
+        let array5 = []
+        let array6 = []
+        let array7 = []
+        for(let i = 0; i < cardArray.length; i++){
+          if(i < divided) {
+            array1.push(cardArray[i])
+          } else if(i < divided * 2 ) {
+            array2.push(cardArray[i])
+          } else if(i < divided * 3 ) {
+            array3.push(cardArray[i])
+          } else if(i < divided * 4 ) {
+            array4.push(cardArray[i])
+          } else if(i < divided * 5 ) {
+            array5.push(cardArray[i])
+          } else if(i < divided * 6 ) {
+            array6.push(cardArray[i])
+          } else {
+            array7.push(cardArray[i])
+          }
+        }
+      if(array1.length === divided ) { array1.push("Epidemic1")}
+      if(array2.length === divided ) { array2.push("Epidemic2")}
+      if(array3.length === divided ) { array3.push("Epidemic3")}
+      if(array4.length === divided ) { array4.push("Epidemic4")}
+      if(array5.length === divided ) { array5.push("Epidemic5")}
+      if(array6.length === divided ) { array6.push("Epidemic6")}
+      console.log(array1);
+      console.log(array2);
+      console.log(array3);
+      console.log(array4);
+      console.log(array5);
+      console.log(array6);
+      console.log(array7);
+      array1 = this.shuffle(array1)
+      array2 = this.shuffle(array2)
+      array3 = this.shuffle(array3)
+      array4 = this.shuffle(array4)
+      array5 = this.shuffle(array5)
+      array6 = this.shuffle(array6)
+      array7 = this.shuffle(array7)
+      console.log(array1);
+      console.log(array2);
+      console.log(array3);
+      console.log(array4);
+      console.log(array5);
+      console.log(array6);
+      console.log(array7);
+      cardArray = this.unionDecks(array1, array2, array3, array4, array5, array6, array7, divided);
+      console.log(cardArray);
+      let epidemicCounter = 1;
+      Object.keys(playerCards).map(card => {
+        for(let i = 0; i < cardArray.length; i++) {
+          if(cardArray[i] === playerCards[card].name) {
+            const city = {...playerCards[playerCards[card].name]}
+            city.id = i+1
+            playerCards[playerCards[card].name] = city
+          }
+        }
+      })
+      // Object.keys(playerCards).map(card => {
+      //   for(let i = 0; i < cardArray.length; i++) {
+      //     if(cardArray[i] === playerCards[card].name) {
+      //       const city = {...playerCards[playerCards[card].name]}
+      //       city.id = i+1
+      //       playerCards[playerCards[card].name] = city
+      //     }
+      //   }
+      // })
+      this.setState({ playerCards })
     }
   }
 
@@ -305,6 +518,7 @@ class Board extends Component {
   nextPlayer = () => {
     const { players, actualPlayer } = this.state
     let nextPlayer
+    let gameSession = "starting"
     Object.keys(players).map(player => {
       if(players[player].id === actualPlayer ) {
         nextPlayer = players[player].id + 1
@@ -312,8 +526,11 @@ class Board extends Component {
     })
     if(players[nextPlayer] === null || players[nextPlayer] === undefined) {
       nextPlayer = 1
+      if(this.state.gameSession === "starting") {
+        gameSession = "started"
+      }
     }
-    this.setState({ actualPlayer: nextPlayer })
+    this.setState({ actualPlayer: nextPlayer, gameSession: gameSession })
   }
 
   selectCast = id => {
@@ -334,7 +551,7 @@ class Board extends Component {
     const { casts } = this.state
     let castDivs = []
     Object.keys(casts).map(cast => {
-      console.log(casts[cast].name);
+      // console.log(casts[cast].name);
       castDivs.push(
         <div
           key={casts[cast].id}
@@ -346,7 +563,7 @@ class Board extends Component {
         </div>
       )
     })
-    console.log(castDivs);
+    // console.log(castDivs);
     return (
       <Fragment>
         <div className="casts">
@@ -363,7 +580,7 @@ class Board extends Component {
         castsSelected = false
       }
     })
-    if(!castsSelected) {
+    if(this.state.gameSession === "starting") {
       return this.renderSelectCast()
     } else {
       return this.renderBoard()
