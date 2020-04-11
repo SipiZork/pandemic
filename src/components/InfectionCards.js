@@ -14,29 +14,47 @@ class infectionCards extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     if(prevProps !== undefined && prevProps !== this.props) {
+      let availableClasses
+      let playedClasses
+      let img
       const {infectionCards, playedInfectionCards} = this.props
-      console.log(playedInfectionCards);
       if (Object.keys(infectionCards).length > 0) {
-        this.setState({ availableClasses: "available-deck", img: true })
+        availableClasses = "available-deck"
+        img = true
       } else {
-        this.setState({ availableClasses: "available-deck empty", img: false })
+        availableClasses = "available-deck empty"
+        img = false
       }
       if (Object.keys(playedInfectionCards).length > 0) {
-        this.setState({ playedClasses: "played-deck" })
+        playedClasses = "played-deck"
       } else {
-        this.setState({ playedClasses: "played-deck empty"})
+        playedClasses = "played-deck empty"
       }
+      this.setState({ availableClasses: availableClasses, img: img, playedClasses: playedClasses})
     }
   }
 
-  availableDeck = () => {
-    const {img} = this.state
-    if(img) {
+  clickable = () => {
+    if(this.props.gameSession === "started" && this.props.actualPlayer === 1) {
       return (
         <div className="cardback" onClick={this.props.drawInfectionCard}>
           <img src={cardback} alt="kartya"/>
         </div>
       )
+    } else {
+      return (
+        <div className="cardback">
+          <img src={cardback} alt="kartya"/>
+        </div>
+      )
+    }
+  }
+
+  availableDeck = () => {
+    const {img} = this.state
+
+    if(img) {
+      return this.clickable()
     } else {
       return this.state.availableTextField
     }

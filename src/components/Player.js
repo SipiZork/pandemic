@@ -2,7 +2,8 @@ import React, { Component, Fragment } from 'react';
 
 class Player extends Component {
   render() {
-    const { player } = this.props
+    const { players, player } = this.props
+    console.log(player);
       return (
         <div
           className="player"
@@ -16,7 +17,7 @@ class Player extends Component {
             </svg>
           </div>
           <div className="name">
-            {/* {player.name} */}
+            {players[player].name}
           </div>
           </div>
         )

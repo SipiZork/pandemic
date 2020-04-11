@@ -15,6 +15,8 @@ class HUD extends Component {
           </div>
           <div className="infection-cards">
             <InfectionCards
+              actualPlayer={this.props.actualPlayer}
+              gameSession={this.props.gameSession}
               infectionCards={this.props.infectionCards}
               drawInfectionCard={this.props.drawInfectionCard}
               playedInfectionCards={this.props.playedInfectionCards}

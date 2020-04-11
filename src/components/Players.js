@@ -11,6 +11,7 @@ class Players extends Component {
             if(players[player].location === city) {
               return (
                 <Player
+                  players={players}
                   player={player}
                 />
               )

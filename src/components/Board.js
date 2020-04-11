@@ -15,6 +15,7 @@ class Board extends Component {
     infectionCards: {},
     playerCards: {},
     playedPlayerCards: {},
+    startCards: 0,
     playedInfectionCards: {},
     actionCards: {},
     casts: {},
@@ -76,11 +77,17 @@ class Board extends Component {
       if(this.state.gameSession === "started") {
         this.startGame()
       }
+      if(this.state.gameSession === "play") {
+        console.log("elindítva");
+      }
     }
   }
 
   componentDidUpdate(prevProps, prevState) {
     this.checkGameSession(prevState)
+    if(this.state.gameSession === "started" && this.state.startCards === 6) {
+      this.setState({ gameSession: "play" })
+    }
   }
 
   // KEZDŐ JÉTLK ÁLLÁS BETÖLTÉSE
@@ -462,7 +469,7 @@ class Board extends Component {
   }
 
   renderBoard = () => {
-    const { cities, players, actualPlayer, infectionCards, playedInfectionCards, playerCards } = this.state
+    const { cities, players, actualPlayer, infectionCards, playedInfectionCards, playerCards, gameSession } = this.state
     // console.log(infectionCards);
     return (
       <Fragment>
@@ -501,6 +508,7 @@ class Board extends Component {
           cities={cities}
           players={players}
           actualPlayer={actualPlayer}
+          gameSession={gameSession}
           infectionCards={infectionCards}
           playerCards={playerCards}
           playedInfectionCards={playedInfectionCards}
@@ -561,12 +569,21 @@ class Board extends Component {
           playedCard.id = nextPlayedId
           playedInfectionCards[card] = playedCard
           delete infectionCards[card]
+          if(this.state.gameSession === "started" && this.state.startCards < 6) {
+            if(this.state.startCards < 2) {
+              this.incrementInfection(playedCard.name, 3)
+            } else if(this.state.startCards < 4) {
+              this.incrementInfection(playedCard.name, 2)
+            } else if(this.state.startCards < 6) {
+              this.incrementInfection(playedCard.name, 1)
+            }
+          }
         }
       })
       Object.keys(infectionCards).map(card => {
         infectionCards[card].id = infectionCards[card].id-1
       })
-      this.setState({ infectionCards, playedInfectionCards })
+      this.setState({ infectionCards, playedInfectionCards, startCards: this.state.startCards+1 })
     }
   }
 
