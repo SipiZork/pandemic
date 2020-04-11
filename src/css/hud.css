@@ -1,0 +1,85 @@
+.cards-wrapper {
+  position: relative;
+  float: right;
+  border: 1px solid red;
+  width: 805px;
+  height: 250px;
+  z-index: 5;
+}
+
+.infection-cards,
+.player-cards {
+  float: right;
+  height: 200px;
+  width: 600px;
+  border: 1px solid white;
+}
+
+.infection-cards {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.player-cards {
+  width: 200px;
+  height: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.player-card-handler.empty {
+  color: white;
+  border: 1px solid red;
+  width: 180px;
+  height: 230px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.available-deck,
+.played-deck {
+  border: 1px solid red;
+  width: 250px;
+  height: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+
+.cardback {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.cardback img {
+  width: 100%;
+  height: 100%;
+  border-radius: 15px;
+}
+
+.cardback .last-card {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 15px;
+  background-color: rgba(255,255,255,1);
+  font-size: 25px;
+  color: black;
+}
+
+.available-deck.empty {
+  background: transparent;
+}
+
+
+.available-deck {
+  margin-right: 40px;
+}

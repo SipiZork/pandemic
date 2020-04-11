@@ -14,6 +14,8 @@ class Board extends Component {
     mode: "normal",
     infectionCards: {},
     playerCards: {},
+    playedPlayerCards: {},
+    playedInfectionCards: {},
     actionCards: {},
     casts: {},
     gameSession: "starting",
@@ -91,6 +93,7 @@ class Board extends Component {
       const card = {
         id: counter,
         name: city,
+        played: false,
         text: null,
       }
       infectionCards[city] = card
@@ -103,6 +106,7 @@ class Board extends Component {
       const card = {
         id: counter,
         name: action,
+        played: false,
         text: actionCards[action].text,
       }
       playerCards[action] = card
@@ -284,7 +288,7 @@ class Board extends Component {
 
   unionDecks = (deck1, deck2, deck3, deck4, deck5, deck6, deck7, divided) => {
     let deck = []
-    console.log(divided);
+    // console.log(divided);
     if(deck5.length > 0 && deck5.length < divided+1 ) { for(let i = 0; i < deck5.length; i++ ) { deck.unshift(deck5[i]) }}
     if(deck6.length > 0 && deck6.length < divided+1 ) { for(let i = 0; i < deck6.length; i++ ) { deck.unshift(deck6[i]) }}
     if(deck7.length > 0 && deck7.length < divided+1 ) { for(let i = 0; i < deck7.length; i++ ) { deck.unshift(deck7[i]) }}
@@ -345,7 +349,7 @@ class Board extends Component {
           cardArray.splice(i,infCard);
         }
       }
-      console.log(cardArray);
+      // console.log(cardArray);
       for(let i = cardArray.length -1; i > 0; i--) {
         const j = Math.floor(Math.random() * i)
         const temp = cardArray[i]
@@ -458,7 +462,8 @@ class Board extends Component {
   }
 
   renderBoard = () => {
-    const { cities, players, actualPlayer } = this.state
+    const { cities, players, actualPlayer, infectionCards, playedInfectionCards, playerCards } = this.state
+    // console.log(infectionCards);
     return (
       <Fragment>
         <div defaultclassname="endgame-screen hide" className={this.state.endGameState.class}>
@@ -469,14 +474,16 @@ class Board extends Component {
             {this.state.endGameState.text}
           </div>
         </div>
-        <svg className="city-lines">
-          <path
-            d={this.drawLines()}
-          />
-          <filter id="filter1">
-            <feDropShadow dx="0" dy="0" stdDeviation="10" floodColor="rgba(240,232,0,1)"/>
-          </filter>
-        </svg>
+        <div className="city-lines-wrapper">
+          <svg className="city-lines">
+            <path
+              d={this.drawLines()}
+            />
+            <filter id="filter1">
+              <feDropShadow dx="0" dy="0" stdDeviation="10" floodColor="rgba(240,232,0,1)"/>
+            </filter>
+          </svg>
+        </div>
         <Cities
           cities={cities}
           players={players}
@@ -490,7 +497,15 @@ class Board extends Component {
           players={players}
           actualPlayer={actualPlayer}
         /> */}
-        <HUD />
+        <HUD
+          cities={cities}
+          players={players}
+          actualPlayer={actualPlayer}
+          infectionCards={infectionCards}
+          playerCards={playerCards}
+          playedInfectionCards={playedInfectionCards}
+          drawInfectionCard={this.drawInfectionCard}
+        />
       </Fragment>
     )
   }
@@ -525,6 +540,34 @@ class Board extends Component {
         this.nextPlayer()
       })
     })
+  }
+
+  drawInfectionCard = () => {
+    const infectionCards =  {...this.state.infectionCards}
+    const playedInfectionCards = {...this.state.playedInfectionCards}
+    if(Object.keys(infectionCards).length > 0) {
+      Object.keys(infectionCards).map(card => {
+        if(infectionCards[card].id === 1) {
+          let nextPlayedId = 0
+          let playedCard = infectionCards[card]
+          if(Object.keys(playedInfectionCards).length > 0) {
+            Object.keys(playedInfectionCards).map(playedCard => {
+              if(playedInfectionCards[playedCard].id > nextPlayedId) {
+                nextPlayedId = playedInfectionCards[playedCard].id
+              }
+            })
+          }
+          nextPlayedId++
+          playedCard.id = nextPlayedId
+          playedInfectionCards[card] = playedCard
+          delete infectionCards[card]
+        }
+      })
+      Object.keys(infectionCards).map(card => {
+        infectionCards[card].id = infectionCards[card].id-1
+      })
+      this.setState({ infectionCards, playedInfectionCards })
+    }
   }
 
   renderSelectCast = () => {
