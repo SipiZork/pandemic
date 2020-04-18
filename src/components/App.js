@@ -17,3 +17,9 @@ function App() {
 }
 
 export default App
+
+
+// this.ref = base.syncState(`pandemic/táblaelérése`, {
+//       context: this,
+//       state: "todos"
+//     });

@@ -17,7 +17,7 @@ class Player extends Component {
             </svg>
           </div>
           <div className="name">
-            {players[player].name}
+            {/* {players[player].name} */}
           </div>
           </div>
         )

@@ -17,9 +17,10 @@ class Board extends Component {
     playedPlayerCards: {},
     startCards: 0,
     playedInfectionCards: {},
+    selectedAction: 0,
     actionCards: {},
     casts: {},
-    gameSession: "starting",
+    gameSession: "waiting",
     infectionCubes: {
       "yellow": {
         color: "yellow",
@@ -38,29 +39,7 @@ class Board extends Component {
         pieces: 24,
       },
     },
-    players: {
-      1: {
-        id: 1,
-        name: "SipiZork",
-        location: "Chicago",
-        cast: null,
-        selectCast: false,
-      },
-      2: {
-        id: 2,
-        name: "Annamari",
-        location: "Chicago",
-        cast: null,
-        selectCast: false,
-      },
-      3: {
-        id: 3,
-        name: "Zsuzsi",
-        location: "Chicago",
-        cast: null,
-        selectCast: false,
-      },
-    },
+    players: {},
     actualPlayer: 1,
     endGameState: {
       class: "endgame-screen hide",
@@ -69,7 +48,41 @@ class Board extends Component {
   }
   // SZÜKSÉGES STATE ELEMEK FELTÖLTÉSE KÜLSŐ ADATOKBÓL
   componentDidMount() {
-    this.setState({ cities: AllCities, actionCards: AllActions, casts: AllCasts })
+    let player
+    const players = {...this.state.players}
+    if(localStorage.getItem("player1") && localStorage.getItem("player1") !== null) {
+      player = {
+        id: 1,
+        name: localStorage.getItem("player1"),
+        location: "Atlanta",
+        cast: null,
+        selectCast: null,
+        actions: 0,
+        creator: true,
+      }
+      players[1] = player
+    } else {
+      let nextPlayer = 0
+      Object.keys(players).map(player => {
+        if(players[player].id > nextPlayer) {
+          nextPlayer = players[player].id
+        }
+      })
+      nextPlayer++
+      player = {
+        id: nextPlayer,
+        name: localStorage.getItem("username"),
+        location: "Atlanta",
+        cast: null,
+        selectCast: null,
+        actions: 0,
+        creator: false,
+      }
+      players[nextPlayer] = player
+    }
+    localStorage.removeItem("player1");
+    localStorage.setItem("user", JSON.stringify(player))
+    this.setState({ cities: AllCities, actionCards: AllActions, casts: AllCasts, players })
   }
 
   checkGameSession = prevState => {
@@ -468,8 +481,43 @@ class Board extends Component {
     this.setState({ endGameState })
   }
 
+  selectAction = action => {
+    let actionCode = 0;
+    switch (action) {
+      case "move-with-car":
+        actionCode=1
+        break
+      case "move-with-plane":
+        actionCode=2
+        break
+      case "move-with-private":
+        actionCode=3
+        break
+      case "move-with-base":
+        actionCode=4
+        break
+      case "build-base":
+        actionCode=5
+        break
+      case "treatment":
+        actionCode=6
+        break
+      case "share-knowledge":
+        actionCode=7
+        break
+      case "develpoment-actiserum":
+        actionCode=8
+        break
+      default:
+        actionCode=0
+    }
+    if(actionCode > 0 && actionCode !== this.state.selectedAction){
+      this.setState({ selectedAction: actionCode })
+    }
+  }
+
   renderBoard = () => {
-    const { cities, players, actualPlayer, infectionCards, playedInfectionCards, playerCards, gameSession } = this.state
+    const { cities, players, actualPlayer, infectionCards, playedInfectionCards, playerCards, gameSession, selectedAction } = this.state
     // console.log(infectionCards);
     return (
       <Fragment>
@@ -495,6 +543,7 @@ class Board extends Component {
           cities={cities}
           players={players}
           actualPlayer={actualPlayer}
+          selectedAction={selectedAction}
           movePlayer={this.movePlayer}
           decrementInfection={this.decrementInfection}
           incrementInfection={this.startIncrement}
@@ -508,11 +557,13 @@ class Board extends Component {
           cities={cities}
           players={players}
           actualPlayer={actualPlayer}
+          selectedAction={selectedAction}
           gameSession={gameSession}
           infectionCards={infectionCards}
           playerCards={playerCards}
           playedInfectionCards={playedInfectionCards}
           drawInfectionCard={this.drawInfectionCard}
+          selectAction={this.selectAction}
         />
       </Fragment>
     )
@@ -613,14 +664,61 @@ class Board extends Component {
     )
   }
 
+  needStartButton = () => {
+    const user = JSON.parse(localStorage.getItem("user"))
+    console.log(user);
+    if(user.creator) {
+      return (
+        <form className="start-button" onSubmit={this.startButton}>
+          <button type="submit">Indítás</button>
+        </form>
+      )
+    } else {
+      return (
+        <div className="waiting-loader">
+          Várakozás az indításra
+          <span>.</span>
+          <span>.</span>
+          <span>.</span>
+        </div>
+      )
+    }
+  }
+
+  renderWaitingRoom = () => {
+    console.log(Object.keys(this.state.players).length);
+    let players = []
+    if(Object.keys(this.state.players).length > 0) {
+      console.log("Nagyobb, mint 0");
+      Object.keys(this.state.players).map(player => {
+        console.log(this.state.players[player]);
+        players.push(<div className="waiting-room-player">{this.state.players[player].name}</div>)
+      })
+    }
+    return (
+      <div className="waiting-room-wrapper">
+        <div className="waiting-room-players">
+          {players}
+          {players}
+          {players}
+          {players}
+          {players}
+          {this.needStartButton()}
+        </div>
+      </div>
+    )
+  }
+
   selectRenderState = () => {
     let castsSelected = true
-    Object.keys(this.state.players).map(player => {
-      if(this.state.players[player].cast === null ) {
-        castsSelected = false
-      }
-    })
-    if(this.state.gameSession === "starting") {
+    // Object.keys(this.state.players).map(player => {
+    //   if(this.state.players[player].cast === null ) {
+    //     castsSelected = false
+    //   }
+    // })
+    if(this.state.gameSession === "waiting") {
+      return this.renderWaitingRoom()
+    } else if(this.state.gameSession === "starting") {
       return this.renderSelectCast()
     } else {
       return this.renderBoard()

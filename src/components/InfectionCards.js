@@ -18,14 +18,14 @@ class infectionCards extends Component {
       let playedClasses
       let img
       const {infectionCards, playedInfectionCards} = this.props
-      if (Object.keys(infectionCards).length > 0) {
+      if (infectionCards !== null && infectionCards !== undefined && Object.keys(infectionCards).length > 0) {
         availableClasses = "available-deck"
         img = true
       } else {
         availableClasses = "available-deck empty"
         img = false
       }
-      if (Object.keys(playedInfectionCards).length > 0) {
+      if (playedInfectionCards !== null && playedInfectionCards !== undefined && Object.keys(playedInfectionCards).length > 0) {
         playedClasses = "played-deck"
       } else {
         playedClasses = "played-deck empty"

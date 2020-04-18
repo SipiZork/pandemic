@@ -1,6 +1,7 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component, Fragment } from 'react'
 import PlayerCards from './PlayerCards'
 import InfectionCards from './InfectionCards'
+import Actions from './Actions'
 import '../css/hud.css'
 
 class HUD extends Component {
@@ -22,6 +23,14 @@ class HUD extends Component {
               playedInfectionCards={this.props.playedInfectionCards}
             />
           </div>
+        </div>
+        <div className="action-wrapper">
+          <Actions
+            selectedAction={this.props.selectedAction}
+            actualPlayer={this.props.actualPlayer}
+            gameSession={this.props.gameSession}
+            selectAction={this.props.selectAction}
+          />
         </div>
       </Fragment>
     )
