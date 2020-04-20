@@ -12,6 +12,20 @@ class infectionCards extends Component {
     img: false,
   }
 
+  componentDidMount() {
+    let img
+    let availableClasses
+    const {infectionCards, playedInfectionCards} = this.props
+    if (infectionCards !== null && infectionCards !== undefined && Object.keys(infectionCards).length > 0) {
+      availableClasses = "available-deck"
+      img = true
+    } else {
+      availableClasses = "available-deck empty"
+      img = false
+    }
+    this.setState({ availableClasses: availableClasses, img: img})
+  }
+
   componentDidUpdate(prevProps, prevState) {
     if(prevProps !== undefined && prevProps !== this.props) {
       let availableClasses

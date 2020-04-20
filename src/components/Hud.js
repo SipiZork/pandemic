@@ -37,4 +37,4 @@ class HUD extends Component {
   }
 }
 
-export default HUD;
+export default HUD

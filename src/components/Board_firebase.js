@@ -69,6 +69,7 @@ class Board extends Component {
         selectCast: false,
         actions: 0,
         creator: true,
+        ready: true,
       }
       localStorage.setItem("user", JSON.stringify(player))
       localStorage.removeItem("creator")
@@ -79,7 +80,6 @@ class Board extends Component {
   componentDidUpdate() {
     const board = {...this.state.board}
     if(board.players.length > 0 && localStorage.getItem("player") && localStorage.getItem("player") !== null && localStorage.getItem("joined") && localStorage.getItem("joined") === "no") {
-      console.log("alma");
       let player = {
         id: board.players.length,
         name: localStorage.getItem("player"),
@@ -88,6 +88,7 @@ class Board extends Component {
         selectCast: false,
         actions: 0,
         creator: false,
+        ready: false,
       }
       board.players[board.players.length] = player
       localStorage.setItem("joined", "yes")
@@ -96,17 +97,16 @@ class Board extends Component {
       this.setState({ board })
     }
     if(localStorage.getItem("user") && localStorage.getItem("user") !== null && !this.state.render) {
-      console.log("Be kéne állítani a render-t true-ra");
       this.setState({ render: true })
     }
     if(board.gameSession === "starting") {
-      let allSelected = true
+      let allSelect = true
       Object.keys(board.players).map(player => {
         if(board.players[player].selectCast === false) {
-          allSelected = false
+          allSelect = false
         }
       })
-      if(allSelected === true) {
+      if(allSelect === true) {
         board.gameSession = "started"
         this.setState({ board })
       }
@@ -118,17 +118,11 @@ class Board extends Component {
     board.cities = AllCities
     board.actionCards = AllActions
     board.casts = AllCasts
-    console.log(board.infectionCards = this.createInfectionDeck())
-    console.log(board.playerCards = this.createPlayerDeck())
+    board.infectionCards = this.createInfectionDeck()
+    board.playerCards = this.createPlayerDeck()
     board.players[1] = player
     this.setState({ board }, () => {
-      console.log("Board feltöltve:")
-      console.log(board)
-      console.log("Render átállítása")
-      console.log(this.state.render)
-      this.setState({ render: true }, () => {
-        console.log(this.state.render);
-      })
+      this.setState({ render: true })
     })
   }
 
@@ -216,7 +210,6 @@ class Board extends Component {
     Object.keys(playerCards).map(card => {
       cardArray.push(playerCards[card].name)
     })
-    console.log(this.state.board.mode);
     for(let i = 0; i < cardArray.length; i++) {
       if(cardArray[i] === "Epidemic1") {
         let infCard
@@ -330,7 +323,6 @@ class Board extends Component {
 
   selectRenderState = () => {
     if(this.state.board.gameSession === "waiting") {
-      console.log("Elindíytjuk a wiating render funkcint");
       return this.renderWaitingRoom()
     } else if(this.state.board.gameSession === "starting") {
       return this.renderSelectCast()
@@ -345,60 +337,220 @@ class Board extends Component {
     this.setState({ board })
   }
 
-  needStartButton = () => {
+  needButton = () => {
     const user = JSON.parse(localStorage.getItem("user"))
-    console.log(user);
+    const players = this.state.board.players
     if(user.creator) {
-      if(this.state.board.players.length > 2)
-      return (
-        <form className="start-button" onSubmit={this.startButton}>
-          <button type="submit">Indítás</button>
-        </form>
-      )
+      let allReady = true
+      Object.keys(players).map(player => {
+        if(players[player].ready === false) {
+          allReady = false
+        }
+      })
+      if(allReady && players.length > 2) {
+        console.log(players.length);
+        return (
+          <form className="start-button" onSubmit={this.startButton}>
+            <button type="submit">Indítás</button>
+          </form>
+        )
+      }
     } else {
-      return (
-        <div className="waiting-loader">
-          Várakozás az indításra
-          <span>.</span>
-          <span>.</span>
-          <span>.</span>
-        </div>
-      )
+      if(players[user.id].ready === true){
+        return (
+          <div className="waiting-loader">
+            Várakozás az indításra
+            <span>.</span>
+            <span>.</span>
+            <span>.</span>
+          </div>
+        )
+      }
     }
   }
 
+  toggleReady = e => {
+    const clickedId = parseInt(e.target.parentElement.getAttribute("index"))
+    const user = JSON.parse(localStorage.getItem("user"))
+    const board = {...this.state.board}
+    if(clickedId === user.id) {
+      board.players[clickedId].ready = !board.players[clickedId].ready
+    }
+    this.setState({ board })
+  }
+
   renderWaitingRoom = () => {
-    console.log("Elindult a waiting render function");
     const existPlayers = this.state.board.players
-    console.log(Object.keys(existPlayers).length);
     let players = []
+    let readyPlayers = []
     if(Object.keys(existPlayers).length > 0) {
-      console.log("Nagyobb, mint 0");
       Object.keys(existPlayers).map(player => {
-        console.log(existPlayers[player])
         if(existPlayers[player].id > 0) {
-          players.push(<div className="waiting-room-player">{existPlayers[player].name}</div>)
+          players.push(<div index={existPlayers[player].id}className="waiting-room-player">{existPlayers[player].name}</div>)
+          readyPlayers.push(
+            <Fragment>
+              <div className="ready-player" index={existPlayers[player].id}>
+                <div className="player-icon">{existPlayers[player].ready ? "֍" : "x"}</div>
+                <div className="player-name">{existPlayers[player].name}</div>
+                <div className="player-click" onClick={(e) => this.toggleReady(e)}></div>
+              </div>
+            </Fragment>
+          )
         }
       })
     }
     return (
-      <div className="waiting-room-wrapper">
-        <div className="waiting-room-players">
-          {players}
-          {this.needStartButton()}
+      <Fragment>
+        <div className="waiting-room-wrapper">
+          <div className="waiting-room-players">
+            {players}
+            {this.needButton()}
+          </div>
         </div>
-      </div>
+        <div className="ready-wrapper">
+          <div className="ready-players">
+            {readyPlayers}
+          </div>
+        </div>
+      </Fragment>
     )
   }
 
-  renderBoard = () => {
+  drawLines = () => {
+    const board = this.state.board
+    let paths = "";
+    Object.keys(board.cities).map(city => {
+      const path = board.cities[city].path
+      console.log(path);
+      if(path !== undefined) {
+        board.cities[city].path.forEach(fromCity => {
+          // console.log(fromCity);
+          const cityPosX = board.cities[city].positionX + 75
+          const cityPosY = board.cities[city].positionY + 15
+          const fromCityPosX = board.cities[fromCity].positionX + 75
+          const fromCityPosY = board.cities[fromCity].positionY + 15
+          paths += (`M200 335 L0 325 M200 340 L0 375 M190 436 L0 520 M1635 323 L1880 330 M1630 590 L1880 550 M1640 820 L1880 730 M${fromCityPosX } ${fromCityPosY} L${cityPosX} ${cityPosY} `)
+        })
+      }
+      return null
+    })
+    return paths
+  }
 
+  movePlayer = city => {
+    const board = {...this.state.board}
+    const { actualPlayer, cities } = this.state.board
+    const { location } = board.players[actualPlayer]
+    const canMoveTo = board.cities[city].from
+    canMoveTo.forEach(moveCity => {
+      // console.log(moveCity);
+      // console.log(location);
+      if(moveCity === location ) {
+        board.players[actualPlayer].location = city;
+        this.setState({ board }, () => {
+          // console.log(`Átmentél: ${city}`);
+        });
+      } else {
+        // console.log("Ide nem tudsz lépni!");
+      }
+    });
+  }
+
+  drawInfectionCard = () => {
+    console.log("Hello");
+    const infectionCards =  {...this.state.infectionCards}
+    const playedInfectionCards = {...this.state.playedInfectionCards}
+    if(Object.keys(infectionCards).length > 0) {
+      Object.keys(infectionCards).map(card => {
+        if(infectionCards[card].id === 1) {
+          let nextPlayedId = 0
+          let playedCard = infectionCards[card]
+          if(Object.keys(playedInfectionCards).length > 0) {
+            Object.keys(playedInfectionCards).map(playedCard => {
+              if(playedInfectionCards[playedCard].id > nextPlayedId) {
+                nextPlayedId = playedInfectionCards[playedCard].id
+              }
+            })
+          }
+          nextPlayedId++
+          playedCard.id = nextPlayedId
+          playedInfectionCards[card] = playedCard
+          delete infectionCards[card]
+          if(this.state.gameSession === "started" && this.state.startCards < 6) {
+            if(this.state.startCards < 2) {
+              this.incrementInfection(playedCard.name, 3)
+            } else if(this.state.startCards < 4) {
+              this.incrementInfection(playedCard.name, 2)
+            } else if(this.state.startCards < 6) {
+              this.incrementInfection(playedCard.name, 1)
+            }
+          }
+        }
+      })
+      Object.keys(infectionCards).map(card => {
+        infectionCards[card].id = infectionCards[card].id-1
+      })
+      this.setState({ infectionCards, playedInfectionCards, startCards: this.state.startCards+1 })
+    }
+  }
+
+  renderBoard = () => {
+    const { cities, players, actualPlayer, infectionCards, playedInfectionCards, playerCards, gameSession, selectedAction } = this.state.board
+    const user = JSON.parse(localStorage.getItem("user"))
+    // console.log(infectionCards);
+    return (
+      <Fragment>
+        <div defaultclassname="endgame-screen hide" className={this.state.board.endGameState.class}>
+          <div className="title">
+            Vesztettetek
+          </div>
+          <div className="text">
+            {this.state.board.endGameState.text}
+          </div>
+        </div>
+        <div className="city-lines-wrapper">
+          <svg className="city-lines">
+            <path
+              d={this.drawLines()}
+            />
+            <filter id="filter1">
+              <feDropShadow dx="0" dy="0" stdDeviation="10" floodColor="rgba(240,232,0,1)"/>
+            </filter>
+          </svg>
+        </div>
+        <Cities
+          cities={cities}
+          players={players}
+          actualPlayer={actualPlayer}
+          selectedAction={selectedAction}
+          movePlayer={this.movePlayer}
+          // decrementInfection={this.decrementInfection}
+          // incrementInfection={this.startIncrement}
+        />
+        {/* <Players
+          cities={cities}
+          players={players}
+          actualPlayer={actualPlayer}
+        /> */}
+        <HUD
+          cities={cities}
+          players={players}
+          actualPlayer={user.id}
+          selectedAction={selectedAction}
+          gameSession={gameSession}
+          infectionCards={infectionCards}
+          playerCards={playerCards}
+          playedInfectionCards={playedInfectionCards}
+          drawInfectionCard={this.drawInfectionCard}
+          // selectAction={this.selectAction}
+        />
+      </Fragment>
+    )
   }
 
   renderSelectCast = () => {
     const board = {...this.state.board}
     let castDivs = []
-    console.log(board.casts);
     Object.keys(board.casts).map(cast => {
       castDivs.push(
         <div
@@ -414,6 +566,9 @@ class Board extends Component {
     // console.log(castDivs);
     return (
       <Fragment>
+        <div className="waitingfor-wrapper">
+          <div className="waitingfor">{this.state.board.players[this.state.board.actualPlayer].name} választ kasztot</div>
+        </div>
         <div className="casts">
           {castDivs}
         </div>
@@ -438,16 +593,16 @@ class Board extends Component {
   nextPlayer = () => {
     const board = {...this.state.board}
     let nextPlayer = 0
-    if(board.actualPlayer === board.players.length) {
+    if(board.actualPlayer === board.players.length-1) {
       nextPlayer = 1
     } else {
       nextPlayer = board.actualPlayer + 1
     }
+    console.log(nextPlayer);
     return nextPlayer
   }
 
   render() {
-    console.log(this.state.render);
     return (
       <Fragment>
         {this.state.render ? this.selectRenderState() : ""}
