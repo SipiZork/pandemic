@@ -102,7 +102,7 @@ class City extends Component {
         >
           <div
             className="circle"
-            onClick={() => this.props.movePlayer(city)}
+            onClick={() => this.props.incrementInfection(city, 1)}
             style={{ backgroundColor: this.colorSwitcher(color) }}
           ></div>
           <div className="name">

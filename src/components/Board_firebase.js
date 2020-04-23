@@ -17,12 +17,13 @@ class Board extends Component {
       infectionCards: {},
       playerCards: {},
       playedPlayerCards: {},
-      startCards: 0,
       playedInfectionCards: {},
       selectedAction: 0,
       actionCards: {},
       casts: {},
       gameSession: "waiting",
+      installedGame: "false",
+      installGameTurn: 0,
       infectionCubes: {
         "yellow": {
           color: "yellow",
@@ -370,12 +371,9 @@ class Board extends Component {
   }
 
   toggleReady = e => {
-    const clickedId = parseInt(e.target.parentElement.getAttribute("index"))
     const user = JSON.parse(localStorage.getItem("user"))
     const board = {...this.state.board}
-    if(clickedId === user.id) {
-      board.players[clickedId].ready = !board.players[clickedId].ready
-    }
+      board.players[user.id].ready = !board.players[user.id].ready
     this.setState({ board })
   }
 
@@ -392,7 +390,7 @@ class Board extends Component {
               <div className="ready-player" index={existPlayers[player].id}>
                 <div className="player-icon">{existPlayers[player].ready ? "֍" : "x"}</div>
                 <div className="player-name">{existPlayers[player].name}</div>
-                <div className="player-click" onClick={(e) => this.toggleReady(e)}></div>
+                <div className="player-click"></div>
               </div>
             </Fragment>
           )
@@ -401,6 +399,7 @@ class Board extends Component {
     }
     return (
       <Fragment>
+        <div style={{color: "white"}} className="join-url">http://localhost:3000/join/{this.props.match.params.pandemicId}</div>
         <div className="waiting-room-wrapper">
           <div className="waiting-room-players">
             {players}
@@ -410,6 +409,7 @@ class Board extends Component {
         <div className="ready-wrapper">
           <div className="ready-players">
             {readyPlayers}
+            <button  onClick={(e) => this.toggleReady(e)}>Ready</button>
           </div>
         </div>
       </Fragment>
@@ -421,7 +421,6 @@ class Board extends Component {
     let paths = "";
     Object.keys(board.cities).map(city => {
       const path = board.cities[city].path
-      console.log(path);
       if(path !== undefined) {
         board.cities[city].path.forEach(fromCity => {
           // console.log(fromCity);
@@ -456,41 +455,88 @@ class Board extends Component {
     });
   }
 
-  drawInfectionCard = () => {
-    console.log("Hello");
-    const infectionCards =  {...this.state.infectionCards}
-    const playedInfectionCards = {...this.state.playedInfectionCards}
-    if(Object.keys(infectionCards).length > 0) {
-      Object.keys(infectionCards).map(card => {
-        if(infectionCards[card].id === 1) {
-          let nextPlayedId = 0
-          let playedCard = infectionCards[card]
-          if(Object.keys(playedInfectionCards).length > 0) {
-            Object.keys(playedInfectionCards).map(playedCard => {
-              if(playedInfectionCards[playedCard].id > nextPlayedId) {
-                nextPlayedId = playedInfectionCards[playedCard].id
-              }
-            })
-          }
-          nextPlayedId++
-          playedCard.id = nextPlayedId
-          playedInfectionCards[card] = playedCard
-          delete infectionCards[card]
-          if(this.state.gameSession === "started" && this.state.startCards < 6) {
-            if(this.state.startCards < 2) {
-              this.incrementInfection(playedCard.name, 3)
-            } else if(this.state.startCards < 4) {
-              this.incrementInfection(playedCard.name, 2)
-            } else if(this.state.startCards < 6) {
-              this.incrementInfection(playedCard.name, 1)
-            }
-          }
+  startIncrement = (city, incrementBy) => {
+    const board = {...this.state.board }
+    // AZ ÖSSZES EDDIG KITÖRT VÁROS KITÖRÉSÉNEK TÖRLÉSE
+    Object.keys(board.cities).map(city => {
+      board.cities[city].outbreaked = false
+    });
+    this.setState({ board }, () => {
+      console.log("Done");
+      this.incrementInfection(city, incrementBy);
+    })
+  }
+
+  incrementInfection = (city, incrementBy, color = null)=> {
+    const board = {...this.state.board }
+    // HA KEVESEBB AZ EDDIGI FERTŐZÉS + HOZZÁADOTT ÉRTÉKM, MINT 4 AKKOR CSAK HOZZÁADJUK
+    if(color === null) {
+      color = board.cities[city].color
+    }
+    if(incrementBy + board.cities[city].infection <= 3) {
+      console.log("Kisebb mint 3");
+      board.cities[city].infection = board.cities[city].infection + incrementBy
+      let colorCounter = 0;
+      Object.keys(board.cities[city].infections).map(infectionColor => {
+        // console.log(cities[city].infections[infectionColor]);
+        if(board.cities[city].infections[infectionColor] === "null" && colorCounter < incrementBy){
+          board.cities[city].infections[infectionColor] = color;
+          board.infectionCubes[color].pieces = board.infectionCubes[color].pieces - 1
+          this.checkInfectionCubes()
+          colorCounter++
         }
+      });
+      this.setState({ board }, () => {
+        console.log("Done");
       })
-      Object.keys(infectionCards).map(card => {
-        infectionCards[card].id = infectionCards[card].id-1
-      })
-      this.setState({ infectionCards, playedInfectionCards, startCards: this.state.startCards+1 })
+    // KÜLÖNBEN (HA LEGALÁBB 4), AKKOR ÉS HA A VÁTOS KITÖRÉS ÉRTÉKE FALSE, A VÁROS KITÖR
+    } else {
+      if(!board.cities[city].outbreaked){
+        console.log("Még nem kitört de nagyobb mint 3");
+        this.outBreak(city)
+      }
+    }
+  }
+
+  outBreak = (city) => {
+    const board = {...this.state.board }
+    board.cities[city].infection = 3
+    if(!board.cities[city].outbreaked) {
+      board.cities[city].from.forEach(beInfected => {
+        // HA A FERTŐZENDŐ VÁROS FERTŐZÉSE KISEBB MINT 3, AKKOR CSAK HOZZÁADUNK EGY FERTŐZÉST
+        if(board.cities[beInfected].infection < 3) {
+          this.incrementInfection(beInfected, 1, board.cities[city].color)
+        // KÜLÖNBEN (HA A FERTŐZENDŐ VÁROS FERTŐZÉSE LEGALÁBB 3), AKKOR ENNEK A VÁROSNAK AZ OUTBREAK ÉRTÉKÉT IGAZRA ÁLLÍTJUK, HOY NE FERTŐZÖDJÖN VISSZA A SZOMSZÉDOS VÁROS KITÖRÉSÉTŐL ÉS A FERTŐZENDŐ VÁROS KITÖR
+        } else {
+          board.cities[city].outbreaked = true
+          this.setState({ board }, () => {
+            this.outBreak(beInfected)
+          })
+        }
+      });
+    }
+  }
+
+  checkInfectionCubes = () => {
+    const board = { ...this.state.board }
+    let lose = false
+    let loseColor = null;
+    Object.keys(board.infectionCubes).map(color => {
+      // console.log(infectionCubes[color]);
+      if(board.infectionCubes[color].pieces <= 0) {
+        lose = true
+        loseColor = color
+      }
+    });
+    if(lose) {
+      this.endGame(`Elfogytak a ${this.endGameColorSwticher(loseColor)} színű betegség kockák`)
+    }
+  }
+
+  drawInfectionCard = () => {
+    const board = {...this.state.board}
+    if(Object.keys(board.infectionCards).length > 0) {
+
     }
   }
 
@@ -525,7 +571,7 @@ class Board extends Component {
           selectedAction={selectedAction}
           movePlayer={this.movePlayer}
           // decrementInfection={this.decrementInfection}
-          // incrementInfection={this.startIncrement}
+          incrementInfection={this.startIncrement}
         />
         {/* <Players
           cities={cities}
@@ -600,6 +646,27 @@ class Board extends Component {
     }
     console.log(nextPlayer);
     return nextPlayer
+  }
+
+  endGameColorSwticher = color => {
+    switch (color) {
+      case "blue":
+        return "kék"
+      case "yellow":
+        return "sárga"
+      case "black":
+        return "fekete"
+      case "red":
+        return "piros"
+    }
+  }
+
+  endGame = (text) => {
+    const endGameDiv =  document.querySelector('.end-screen')
+    const board = {...this.state.board }
+    board.endGameState.class = "endgame-screen show"
+    board.endGameState.text = text
+    this.setState({ board })
   }
 
   render() {

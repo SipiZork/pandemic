@@ -5,15 +5,13 @@ class CreateLogin extends Component {
 
   createRoom = (e) => {
     e.preventDefault()
-    const roomName = e.target.roomName.value
     const name = e.target.name.value
     localStorage.setItem("creator", name)
-    this.props.history.push(`/pandemic/${roomName}${Date.now()}`)
+    this.props.history.push(`/pandemic/${Date.now()}`)
   }
 
   joinRoom = (e) => {
     e.preventDefault()
-    const pass = e.target.password.value
     const name = e.target.name.value
     localStorage.setItem("player", name)
     localStorage.setItem("joined", "no")
@@ -32,12 +30,8 @@ class CreateLogin extends Component {
                 <input type="name" name="name" defaultValue="" className="input" required="required" autoComplete="off"/>
                 <span>Felhasználónév</span>
               </div>
-              <div className="inputBox">
-                <input type="password" name="password" className="input" required="required" autoComplete="off"/>
-                <span>Játékszoba jelszava</span>
-              </div>
               <div className="button-wrapper">
-                <button type="submit">Létrehozás</button>
+                <button type="submit">Csatlakozás</button>
               </div>
             </form>
           </div>
@@ -52,14 +46,6 @@ class CreateLogin extends Component {
               <div className="inputBox">
                 <input type="name" name="name" defaultValue="SipiZork" className="input" required="required" autoComplete="off"/>
                 <span>Felhasználónév</span>
-              </div>
-              <div className="inputBox">
-                <input type="name" name="roomName" defaultValue="asd" className="input" required="required" autoComplete="off"/>
-                <span>Játékszoba neve</span>
-              </div>
-              <div className="inputBox">
-                <input type="name" name="password" defaultValue="asd" className="input" required="required" autoComplete="off"/>
-              <span>Játékszoba jelszava</span>
               </div>
               <div className="button-wrapper">
                 <button type="submit">Létrehozás</button>

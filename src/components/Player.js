@@ -3,7 +3,6 @@ import React, { Component, Fragment } from 'react';
 class Player extends Component {
   render() {
     const { players, player } = this.props
-    console.log(player);
       return (
         <div
           className="player"

@@ -1,7 +1,9 @@
 .endgame-screen {
   /* border: 1px solid red; */
-  width: 100vw;
-  height: 100vh;
+  min-width: 1880px;
+  max-width: 1880px;
+  min-height: 970px;
+  max-height: 970px;
   display: flex;
   color: white;
   position: absolute;
